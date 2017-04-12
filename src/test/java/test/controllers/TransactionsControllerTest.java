@@ -4,8 +4,11 @@
 package test.controllers;
 
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Properties;
 
+import SecureNetRestApiSDK.Api.Models.Transaction;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,17 +27,20 @@ import SecureNetRestApiSDK.Api.Responses.AuthorizeResponse;
 import SecureNetRestApiSDK.Api.Responses.TransactionRetrieveResponse;
 import SecureNetRestApiSDK.Api.Responses.TransactionSearchResponse;
 import SecureNetRestApiSDK.Api.Responses.TransactionUpdateResponse;
+import test.HelperTest;
 
 public class TransactionsControllerTest   
 {
 	
 	Properties config ;
+	HelperTest helper;
 	
 	@Before
 	public void before() throws Exception{
 		InputStream stream  = this.getClass().getResourceAsStream("/config.properties");
 		config = new Properties();
 		config.load(stream);
+		helper = new HelperTest();
 	}
     
     /**
@@ -44,9 +50,9 @@ public class TransactionsControllerTest
 	@Test
     public void transactionreportingandmanagementsearchtransactionrequestreturnssuccessfully() throws Exception {
         // Arramge
-        TransactionSearchRequest request = new TransactionSearchRequest();
-        request.setDeveloperApplication(getDeveloperApplication());
-        request.setTransactionId(createTransaction());
+        TransactionSearchRequest request = helper.getATransactionSearchRequiest();
+        boolean containCATIndicator = false;
+		request.setTransactionId(createTransaction(containCATIndicator));
         APIContext apiContext = new APIContext();
         TransactionsController controller = new TransactionsController();
         // Act
@@ -55,6 +61,28 @@ public class TransactionsControllerTest
         Assert.assertTrue(response.toResponseString(), response.getSuccess());
     }
 
+	/**
+	 * Successful response returned from a Search Transaction request Include CAT field.
+	 * https://apidocs.securenet.com/docs/transactions.html?lang=csharp#search
+	 */
+	@Test
+	public void transactionreportingandmanagementsearchtransactionrequestWithCATIndicatorreturnssuccessfully() throws Exception {
+		// Arramge
+		TransactionSearchRequest request = helper.getATransactionSearchRequiest();
+		boolean containCATIndicator = true;
+		request.setTransactionId(createTransaction(containCATIndicator));
+		APIContext apiContext = new APIContext();
+		TransactionsController controller = new TransactionsController();
+		// Act
+		TransactionSearchResponse response = (TransactionSearchResponse) controller.processRequest(apiContext,request,TransactionSearchResponse.class);
+		// Assert
+		Assert.assertTrue(response.toResponseString(), response.getSuccess());
+		List<Transaction> transactions = response.getTransactions();
+		for(Transaction transaction : transactions){
+			Assert.assertEquals(transaction.getCATIndicator(),helper.getCATIndicator());
+		}
+	}
+
     /**
     * Successful response returned from a Retrieve Transaction request.
     * https://apidocs.securenet.com/docs/transactions.html?lang=csharp#retrieve
@@ -62,9 +90,9 @@ public class TransactionsControllerTest
 	@Test
     public void transactionreportingandmanagementretrievetransactionrequestreturnssuccessfully() throws Exception {
         // Arrange
-        TransactionRetrieveRequest request = new TransactionRetrieveRequest();
-        request.setDeveloperApplication(getDeveloperApplication());
-        request.setTransactionId(createTransaction());
+        TransactionRetrieveRequest request = helper.getATransactionRetrieveRequest();
+		boolean containCATIndicator = false;
+        request.setTransactionId(createTransaction(containCATIndicator));
         APIContext apiContext = new APIContext();
         TransactionsController controller = new TransactionsController();
         // Act
@@ -73,6 +101,28 @@ public class TransactionsControllerTest
         Assert.assertTrue(response.toResponseString(), response.getSuccess());
     }
 
+	/**
+	 * Successful response returned from a Retrieve Transaction request Include CAT field.
+	 * https://apidocs.securenet.com/docs/transactions.html?lang=csharp#retrieve
+	 */
+	@Test
+	public void transactionreportingandmanagementretrievetransactionrequestWithCATIndicatorreturnssuccessfully() throws Exception {
+		// Arrange
+		TransactionRetrieveRequest request = helper.getATransactionRetrieveRequest();
+		boolean containCATIndicator = true;
+		request.setTransactionId(createTransaction(containCATIndicator));
+		APIContext apiContext = new APIContext();
+		TransactionsController controller = new TransactionsController();
+		// Act
+		TransactionRetrieveResponse response = (TransactionRetrieveResponse) controller.processRequest(apiContext,request,TransactionRetrieveResponse.class);
+		// Assert
+		Assert.assertTrue(response.toResponseString(), response.getSuccess());
+		List<Transaction> transactions = response.getTransactions();
+		for(Transaction transaction : transactions){
+			Assert.assertEquals(transaction.getCATIndicator(),helper.getCATIndicator());
+		}
+	}
+
     /**
     * Successful response returned from an Update Transaction request.
     * https://apidocs.securenet.com/docs/transactions.html?lang=csharp#update
@@ -80,9 +130,9 @@ public class TransactionsControllerTest
 	@Test
     public void transactionreportingandmanagementupdatetransactionrequestreturnssuccessfully() throws Exception {
         // Arrange
-        TransactionUpdateRequest request = new TransactionUpdateRequest();
-        request.setDeveloperApplication(getDeveloperApplication());
-        request.setReferenceTransactionId(createTransaction());
+        TransactionUpdateRequest request = helper.getATransactionUpdateRequest();
+        boolean containCATIndicator = false;
+        request.setReferenceTransactionId(createTransaction(containCATIndicator));
         APIContext apiContext = new APIContext();
         TransactionsController controller = new TransactionsController();
         // Act
@@ -90,41 +140,11 @@ public class TransactionsControllerTest
         // Assert
         Assert.assertTrue(response.toResponseString(), response.getSuccess());
     }
-    
-	private DeveloperApplication getDeveloperApplication() {
-		DeveloperApplication devApp = new DeveloperApplication();
-		devApp.setDeveloperId(Integer.parseInt(config.getProperty("developerId")));
-		devApp.setVersion(config.getProperty("versionId"));
-		return devApp;
-	}
-    
-    private Card getCard(){
-		Card card = new Card();
-		card.setAddress(getAddress());
-		card.setCvv("123");
-		card.setExpirationDate("07/2018");
-		card.setNumber("4111111111111111");
-		return card;
-	}
-    
-    private Address getAddress() {
-		Address address = new Address();
-		address.setCity("Austin");
-		address.setCountry("US");
-		address.setLine1("123 Main St.");
-		address.setState("TX");
-		address.setZip("78759");
-		return address;
-	}
-    
-    private int createTransaction()
+
+    private int createTransaction(boolean containCATIndicator)
 			throws Exception {
 		// Arrange
-		AuthorizeRequest request = new AuthorizeRequest();
-		request.setCard(getCard());
-		request.setAddToVault(true);
-		request.setAmount(20d);
-		request.setDeveloperApplication(getDeveloperApplication());
+		AuthorizeRequest request = helper.getAnAuthorizeRequiest(containCATIndicator);
 		APIContext apiContext = new APIContext();
 		PaymentsController controller = new PaymentsController();
 		// Act

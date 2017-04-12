@@ -6,6 +6,10 @@ package test.controllers;
 import java.io.InputStream;
 import java.util.Properties;
 
+import SecureNetRestApiSDK.Api.Controllers.PaymentsController;
+import SecureNetRestApiSDK.Api.Models.Transaction;
+import SecureNetRestApiSDK.Api.Requests.ChargeRequest;
+import SecureNetRestApiSDK.Api.Responses.ChargeResponse;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,81 +23,126 @@ import SecureNetRestApiSDK.Api.Requests.BatchRetrieveRequest;
 import SecureNetRestApiSDK.Api.Responses.BatchCloseResponse;
 import SecureNetRestApiSDK.Api.Responses.BatchCurrentResponse;
 import SecureNetRestApiSDK.Api.Responses.BatchRetrieveResponse;
+import test.HelperTest;
 
-public class BatchesControllerTest   
-{
-	
-	Properties config ;
-	
-	@Before
-	public void before() throws Exception{
-		InputStream stream  = this.getClass().getResourceAsStream("/config.properties");
-		config = new Properties();
-		config.load(stream);
-	}
-	
-    /**
-    * Successful response returned from a Settlement Close Batch request.
-    * https://apidocs.securenet.com/docs/settlement.html?lang=csharp#closebatch
-    */
-	@Test
-    public void settlementclosebatchrequestreturnssuccessfully() throws Exception {
-		getBatchCloseResponse();
+public class BatchesControllerTest {
+
+    Properties config;
+    HelperTest helper;
+
+    @Before
+    public void before() throws Exception {
+        InputStream stream = this.getClass().getResourceAsStream("/config.properties");
+        config = new Properties();
+        config.load(stream);
+        helper = new HelperTest();
     }
 
     /**
-    * Successful response returned from a Settlement Retrieve Closed Batch request.
-    * https://apidocs.securenet.com/docs/settlement.html?lang=csharp#retrievebatch
-    */
-	@Test
+     * Successful response returned from a Settlement Close Batch request.
+     * https://apidocs.securenet.com/docs/settlement.html?lang=csharp#closebatch
+     */
+    @Test
+    public void settlementclosebatchrequestreturnssuccessfully() throws Exception {
+        boolean containCATIndicator = false;
+        createTransaction(containCATIndicator);
+        getBatchCloseResponse();
+    }
+
+    /**
+     * Successful response returned from a Settlement Close Batch request Include CAT field.
+     * https://apidocs.securenet.com/docs/settlement.html?lang=csharp#closebatch
+     */
+    @Test
+    public void settlementclosebatchrequestWithCATIndicatorreturnssuccessfully() throws Exception {
+        boolean containCATIndicator = true;
+        int transactionId = createTransaction(containCATIndicator);
+        BatchCloseResponse closeResponse = getBatchCloseResponse();
+        Transaction searchedTransaction = helper.getTransactionFromTransactionList(transactionId,closeResponse.getTransactions());
+        Assert.assertEquals(searchedTransaction.getCATIndicator(),helper.getCATIndicator());
+    }
+
+    /**
+     * Successful response returned from a Settlement Retrieve Closed Batch request.
+     * https://apidocs.securenet.com/docs/settlement.html?lang=csharp#retrievebatch
+     */
+    @Test
     public void settlementretrieveclosedbatchrequestreturnssuccessfully() throws Exception {
         // Arrange
-    	BatchCloseResponse closeResponse = getBatchCloseResponse();
-    	
-        BatchRetrieveRequest request = new BatchRetrieveRequest();
-        request.setDeveloperApplication(getDeveloperApplication());
+        boolean containCATIndicator = false;
+        createTransaction(containCATIndicator);
+        BatchCloseResponse closeResponse = getBatchCloseResponse();
+
+        BatchRetrieveRequest request = helper.getABatchRetrieveRequest();
         request.setId(Integer.valueOf(closeResponse.getBatchId()));
         APIContext apiContext = new APIContext();
         BatchesController controller = new BatchesController();
         // Act
-        BatchRetrieveResponse response = (BatchRetrieveResponse) controller.processRequest(apiContext,request,BatchRetrieveResponse.class);
+        BatchRetrieveResponse response = (BatchRetrieveResponse) controller.processRequest(apiContext, request, BatchRetrieveResponse.class);
         // Assert
         Assert.assertTrue(response.toResponseString(), response.getSuccess());
+
+    }
+
+    /**
+     * Successful response returned from a Settlement Retrieve Closed Batch request Include CAT field.
+     * https://apidocs.securenet.com/docs/settlement.html?lang=csharp#retrievebatch
+     */
+    @Test
+    public void settlementretrieveclosedbatchrequestWithCATIndicatorreturnssuccessfully() throws Exception {
+        // Arrange
+        boolean containCATIndicator = true;
+        int transactionId = createTransaction(containCATIndicator);
+        BatchCloseResponse closeResponse = getBatchCloseResponse();
+
+        BatchRetrieveRequest request = helper.getABatchRetrieveRequest();
+        request.setId(Integer.valueOf(closeResponse.getBatchId()));
+        APIContext apiContext = new APIContext();
+        BatchesController controller = new BatchesController();
+        // Act
+        BatchRetrieveResponse response = (BatchRetrieveResponse) controller.processRequest(apiContext, request, BatchRetrieveResponse.class);
+        // Assert
+        Assert.assertTrue(response.toResponseString(), response.getSuccess());
+        Transaction searchedTransaction = helper.getTransactionFromTransactionList(transactionId,response.getTransactions());
+        Assert.assertEquals(searchedTransaction.getCATIndicator(),helper.getCATIndicator());
     }
 
     /*
     * Successful response returned from a Settlement Retrieve Current Batch request.
     * https://apidocs.securenet.com/docs/settlement.html?lang=csharp#currentbatch
     */
-	@Test
+    @Test
     public void settlementretrievingcurrentbatchrequestreturnssuccessfully() throws Exception {
         // Arrange
-        BatchCurrentRequest request = new BatchCurrentRequest();
-        request.setDeveloperApplication(getDeveloperApplication());
+        BatchCurrentRequest request = helper.getABatchCurrentRequest();
         APIContext apiContext = new APIContext();
         BatchesController controller = new BatchesController();
         // Act
-        BatchCurrentResponse response = (BatchCurrentResponse) controller.processRequest(apiContext,request,BatchCurrentResponse.class);
+        BatchCurrentResponse response = (BatchCurrentResponse) controller.processRequest(apiContext, request, BatchCurrentResponse.class);
         // Assert
         Assert.assertTrue(response.toResponseString(), response.getSuccess());
     }
-    
-    private BatchCloseResponse getBatchCloseResponse() throws Exception{
-    	 BatchCloseRequest request = new BatchCloseRequest();
-         request.setDeveloperApplication(getDeveloperApplication());
-         APIContext apiContext = new APIContext();
-         BatchesController controller = new BatchesController();
-         BatchCloseResponse response = (BatchCloseResponse) controller.processRequest(apiContext,request,BatchCloseResponse.class);
-         Assert.assertTrue(response.toResponseString(), response.getSuccess());
-         return response;
+
+    private BatchCloseResponse getBatchCloseResponse() throws Exception {
+        BatchCloseRequest request = helper.getABachCloseRequest();
+        APIContext apiContext = new APIContext();
+        BatchesController controller = new BatchesController();
+        BatchCloseResponse response = (BatchCloseResponse) controller.processRequest(apiContext, request, BatchCloseResponse.class);
+        Assert.assertTrue(response.toResponseString(), response.getSuccess());
+        return response;
     }
 
-    private DeveloperApplication getDeveloperApplication() {
-		DeveloperApplication devApp = new DeveloperApplication();
-		devApp.setDeveloperId(Integer.parseInt(config.getProperty("developerId")));
-		devApp.setVersion(config.getProperty("versionId"));
-		return devApp;
-	}
+    private int createTransaction(boolean containCATIndicator)
+            throws Exception {
+        // Arrange
+        ChargeRequest request = helper.getAChargeRequest(containCATIndicator);
+        APIContext apiContext = new APIContext();
+        PaymentsController controller = new PaymentsController();
+        // Act
+        ChargeResponse response = (ChargeResponse) controller.processRequest(apiContext, request, ChargeResponse.class);
+        // Assert
+        Assert.assertTrue(response.toResponseString(), response.getSuccess());
+        return response.getTransaction().getTransactionId();
+    }
+
 }
-
-
