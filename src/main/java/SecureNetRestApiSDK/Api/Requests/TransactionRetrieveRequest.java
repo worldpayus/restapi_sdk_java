@@ -19,11 +19,12 @@ public class TransactionRetrieveRequest  extends SecureNetRequest
     }
 
     public String getUri() throws Exception {
-        return "api/transactions/Search";
+        return String.format("api/transactions/%d", getTransactionId());
+
     }
 
     public HttpMethodEnum getMethod() throws Exception {
-        return HttpMethodEnum.POST;
+        return HttpMethodEnum.GET;
     }
 
 }

@@ -151,11 +151,9 @@ public class CustomersControllerTest {
 	public void secureNetVaultStoreAccountAfterChargeRequestReturnsSuccessfully()
 			throws Exception {
 		// Arrange
-		ChargeRequest request = new ChargeRequest();
-		request.setDeveloperApplication(getDeveloperApplication());
-		request.setCard(getCard());
+		boolean containCATIndicator = false;
+		ChargeRequest request = helper.getAChargeRequest(containCATIndicator);
 		request.setAddToVault(true);
-		request.setAmount(11d);
 		APIContext apiContext = new APIContext();
 		CustomersController controller = new CustomersController();
 		// Act
@@ -165,6 +163,26 @@ public class CustomersControllerTest {
 		Assert.assertTrue(response.toResponseString(),response.getSuccess());
 	}
 
+	/**
+	 * Successful response returned from a Storing Acount After Charge request Include CAT field.
+	 * https://apidocs.securenet.com/docs/vault.html?lang=csharp#storedaccount
+	 */
+	@Test
+	public void secureNetVaultStoreAccountAfterChargeRequestWithCATIndicatorReturnsSuccessfully()
+			throws Exception {
+		// Arrange
+		boolean containCATIndicator = true;
+		ChargeRequest request = helper.getAChargeRequest(containCATIndicator);
+		request.setAddToVault(true);
+		APIContext apiContext = new APIContext();
+		CustomersController controller = new CustomersController();
+		// Act
+		/* [UNSUPPORTED] 'var' as type is unsupported "var" */
+		ChargeResponse response = (ChargeResponse) controller.processRequest(apiContext, request,ChargeResponse.class);
+		// Assert
+		Assert.assertTrue(response.toResponseString(),response.getSuccess());
+		Assert.assertEquals(response.getTransaction().getCATIndicator(),helper.getCATIndicator());
+	}
 	/**
 	 * Unit Tests for Creating a Payment Account, Creating an Installment Plan,
 	 * Updating the Installment Plan, Retrieving the Installment Plan, and
@@ -257,7 +275,7 @@ public class CustomersControllerTest {
 			String customerId, String paymentMethodId) throws Exception {
 		// Arrange
 		ChargeRequest request = new ChargeRequest();
-		request.setDeveloperApplication(getDeveloperApplication());
+		request.setDeveloperApplication(helper.getDeveloperApplication());
 		request.setPaymentVaultToken(getPaymentVaultToken(customerId,paymentMethodId));
 		request.setAmount(200D);
 		request.setAddToVault(true);
@@ -301,7 +319,7 @@ public class CustomersControllerTest {
 		UpdateCustomerRequest request = new UpdateCustomerRequest();
 		request.setCustomerId(customerId);
 		request.setFirstName("new Name");
-		request.setDeveloperApplication(getDeveloperApplication());
+		request.setDeveloperApplication(helper.getDeveloperApplication());
 		APIContext apiContext = new APIContext();
 		CustomersController controller = new CustomersController();
 		// Act
@@ -325,8 +343,8 @@ public class CustomersControllerTest {
 		// Arrange
 		AddPaymentMethodRequest request = new AddPaymentMethodRequest();
 		request.setCustomerId(customerId);
-		request.setDeveloperApplication(getDeveloperApplication());
-		request.setCard(getCard());
+		request.setDeveloperApplication(helper.getDeveloperApplication());
+		request.setCard(helper.getCard());
 		APIContext apiContext = new APIContext();
 		CustomersController controller = new CustomersController();
 		// Act
@@ -368,10 +386,10 @@ public class CustomersControllerTest {
 		// Arrange
 		UpdatePaymentMethodRequest request = new UpdatePaymentMethodRequest();
 		request.setCustomerId(customerId);
-		request.setDeveloperApplication(getDeveloperApplication());
+		request.setDeveloperApplication(helper.getDeveloperApplication());
 		request.setPaymentMethodId(paymentMethodId);
 		request.setPrimary(true);
-		Card card = getCard();
+		Card card = helper.getCard();
 		card.setCvv("222");
 		request.setCard(card);
 		APIContext apiContext = new APIContext();
@@ -393,7 +411,7 @@ public class CustomersControllerTest {
 		RemovePaymentMethodRequest request = new RemovePaymentMethodRequest();
 		request.setCustomerId(customerId);
 		request.setPaymentMethodId(paymentMethodId);
-		request.setDeveloperApplication(getDeveloperApplication());
+		request.setDeveloperApplication(helper.getDeveloperApplication());
 		APIContext apiContext = new APIContext();
 		CustomersController controller = new CustomersController();
 		// Act
@@ -416,7 +434,7 @@ public class CustomersControllerTest {
 		// Arrange
 		AddRecurringPaymentPlanRequest request = new AddRecurringPaymentPlanRequest();
 		request.setCustomerId(customerId);
-		request.setDeveloperApplication(getDeveloperApplication());
+		request.setDeveloperApplication(helper.getDeveloperApplication());
 		request.setPlan(getRecurringPaymentPlan(paymentMethodId));
 		APIContext apiContext = new APIContext();
 		CustomersController controller = new CustomersController();
@@ -465,7 +483,7 @@ public class CustomersControllerTest {
 		request.setCustomerId(customerId);
 		request.setPlanId(planId);
 		request.setIncludeRawObjects(true);
-		request.setDeveloperApplication(getDeveloperApplication());
+		request.setDeveloperApplication(helper.getDeveloperApplication());
 		request.setIncludeRequest(true);
 		request.setPlan(getRecurringPaymentPlan(null));
 		APIContext apiContext = new APIContext();
@@ -491,7 +509,7 @@ public class CustomersControllerTest {
 		// Arrange
 		AddInstallmentPaymentPlanRequest request = new AddInstallmentPaymentPlanRequest();
 		request.setCustomerId(customerId);
-		request.setDeveloperApplication(getDeveloperApplication());
+		request.setDeveloperApplication(helper.getDeveloperApplication());
 		request.setPlan(getInstallmentPlan(paymentMethodId));
 		APIContext apiContext = new APIContext();
 		CustomersController controller = new CustomersController();
@@ -556,7 +574,7 @@ public class CustomersControllerTest {
 		UpdateInstallmentPaymentPlanRequest request = new UpdateInstallmentPaymentPlanRequest();
 		request.setCustomerId(customerId);
 		request.setPlanId(planId);
-		request.setDeveloperApplication(getDeveloperApplication());
+		request.setDeveloperApplication(helper.getDeveloperApplication());
 		request.setPlan(getInstallmentPlan(null));
 		APIContext apiContext = new APIContext();
 		CustomersController controller = new CustomersController();
@@ -580,7 +598,7 @@ public class CustomersControllerTest {
 		// Arrange
 		AddVariablePaymentPlanRequest request = new AddVariablePaymentPlanRequest();
 		request.setCustomerId(customerId);
-		request.setDeveloperApplication(getDeveloperApplication());
+		request.setDeveloperApplication(helper.getDeveloperApplication());
 		request.setPlan(getVariablePaymentPlan(paymentMethodId));
 		APIContext apiContext = new APIContext();
 		CustomersController controller = new CustomersController();
@@ -609,7 +627,7 @@ public class CustomersControllerTest {
 		UpdateVariablePaymentPlanRequest request = new UpdateVariablePaymentPlanRequest();
 		request.setCustomerId(customerId);
 		request.setPlanId(planId);
-		request.setDeveloperApplication(getDeveloperApplication());
+		request.setDeveloperApplication(helper.getDeveloperApplication());
 		request.setPlan(getVariablePaymentPlan("1"));
 		APIContext apiContext = new APIContext();
 		CustomersController controller = new CustomersController();
@@ -653,7 +671,7 @@ public class CustomersControllerTest {
 		DeletePaymentPlanRequest request = new DeletePaymentPlanRequest();
 		request.setCustomerId(customerId);
 		request.setPlanId(planId);
-		request.setDeveloperApplication(getDeveloperApplication());
+		request.setDeveloperApplication(helper.getDeveloperApplication());
 		APIContext apiContext = new APIContext();
 		CustomersController controller = new CustomersController();
 		// Act
@@ -674,11 +692,11 @@ public class CustomersControllerTest {
 		customerRequest.setNotes("test notes");
 		customerRequest.setCompany("Test Company");
 		
-		customerRequest.setCard(getCard());
+		customerRequest.setCard(helper.getCard());
 		customerRequest.setPrimary(true);
 
-		customerRequest.setAddress(getAddress());
-		customerRequest.setDeveloperApplication(getDeveloperApplication());
+		customerRequest.setAddress(helper.getAddress());
+		customerRequest.setDeveloperApplication(helper.getDeveloperApplication());
 
 		UserDefinedField udf = new UserDefinedField();
 		udf.setUdfName("UDF1");
@@ -691,7 +709,7 @@ public class CustomersControllerTest {
 
 	private CreateCustomerRequest getCreateCustomerRequestObject() {
 		CreateCustomerRequest customerRequest = new CreateCustomerRequest();
-		customerRequest.setFirstName("Test"+String.valueOf(Math.random()));
+		customerRequest.setFirstName("Test" + String.valueOf(Math.random()));
 		customerRequest.setLastName("Tester");
 		customerRequest.setPhoneNumber("512-122-1211");
 		customerRequest.setEmailAddress("some@emailaddress.com");
@@ -699,8 +717,8 @@ public class CustomersControllerTest {
 		customerRequest.setNotes("test notes");
 		customerRequest.setCompany("Test Company");
 
-		customerRequest.setAddress(getAddress());
-		customerRequest.setDeveloperApplication(getDeveloperApplication());
+		customerRequest.setAddress(helper.getAddress());
+		customerRequest.setDeveloperApplication(helper.getDeveloperApplication());
 
 		UserDefinedField udf = new UserDefinedField();
 		udf.setUdfName("UDF1");
@@ -711,31 +729,6 @@ public class CustomersControllerTest {
 		return customerRequest;
 	}
 
-	private Address getAddress() {
-		Address address = new Address();
-		address.setCity("Austin");
-		address.setCountry("US");
-		address.setLine1("123 Main St.");
-		address.setState("TX");
-		address.setZip("78759");
-		return address;
-	}
-
-	private DeveloperApplication getDeveloperApplication() {
-		DeveloperApplication devApp = new DeveloperApplication();
-		devApp.setDeveloperId(Integer.parseInt(config.getProperty("developerId")));
-		devApp.setVersion(config.getProperty("versionId"));
-		return devApp;
-	}
-	
-	private Card getCard(){
-		Card card = new Card();
-		card.setAddress(getAddress());
-		card.setCvv("123");
-		card.setExpirationDate("07/2018");
-		card.setNumber("4111111111111111");
-		return card;
-	}
 	
 	private PaymentVaultToken getPaymentVaultToken(String customerId, String paymentMethodId) {
 		PaymentVaultToken paymentVaultToken = new PaymentVaultToken();

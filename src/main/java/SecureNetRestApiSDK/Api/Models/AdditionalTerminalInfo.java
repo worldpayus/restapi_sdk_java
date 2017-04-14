@@ -69,6 +69,17 @@ public class AdditionalTerminalInfo
     public void setStoreNumber(String value) {
         storeNumber = value;
     }
+    /**
+     * Represents the value for a Cardholder Activated Terminal type of transaction.
+     */
+    private String catIndicator = new String();
+    public String getCAIndicator() {
+        return catIndicator;
+    }
+
+    public void setCATIndicator(String value) {
+        catIndicator = value;
+    }
 
 }
 

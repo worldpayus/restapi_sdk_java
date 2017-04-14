@@ -57,11 +57,11 @@ public class TransactionSearchRequest  extends SecureNetRequest
 
 
     public String getUri() throws Exception {
-        return String.format("api/transactions/%d", getTransactionId());
+        return "api/transactions/Search";
     }
 
     public HttpMethodEnum getMethod() throws Exception {
-        return HttpMethodEnum.GET;
+        return HttpMethodEnum.POST;
     }
 
 }
