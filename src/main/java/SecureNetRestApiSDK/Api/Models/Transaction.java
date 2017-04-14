@@ -466,6 +466,14 @@ public class Transaction
         dynamicMCC = value;
     }
 
+    private String catIndicator = new String();
+    public String getCATIndicator() {
+        return catIndicator;
+    }
+
+    public void setCATIndicator(String value) {
+        catIndicator = value;
+    }
 }
 
 
